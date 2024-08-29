@@ -9,7 +9,7 @@
 using std::placeholders::_1;
 
 // Converts all data fields of a PointCloud2 from Float64 to Float32.
-// Assumes data is one dimensional, little endian, only Float64 fields, and densily packed.
+// Assumes data is a one dimensional array, little endian, only Float64 fields, and densily packed.
 // 
 // Run for example from command line like this:
 //   ros2 run message_converters converter_pointcloud2 --ros-args -p input:=some_topic -p output:=converted_topic
@@ -51,8 +51,7 @@ class PointCloud2Converter : public rclcpp::Node
         return;
       }
       
-      
-      // Only allow big endian
+      // Only allow little endian
       if (msg_in.is_bigendian)
       {
         RCLCPP_ERROR(get_logger(), "Failed to convert pointcloud2 because is_bigendian is true.");
