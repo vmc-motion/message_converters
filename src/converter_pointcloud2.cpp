@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/qos.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 #include "sensor_msgs/point_cloud2_iterator.hpp"
 #include "rcpputils/asserts.hpp"
@@ -23,15 +24,22 @@ class PointCloud2Converter : public rclcpp::Node
     {
       declare_parameter(input_topic_arg_name_, "input_topic");
       declare_parameter(output_topic_arg_name_, "output_topic");
+      declare_parameter(qos_sensor_arg_name_, false);
       
       std::string input_topic_name = get_parameter(input_topic_arg_name_).as_string();
       std::string output_topic_name = get_parameter(output_topic_arg_name_).as_string();
+      bool use_qos_profile_sensor_data = get_parameter(qos_sensor_arg_name_).as_bool();
+      
+      size_t queue_size = 5;
+      auto qos = use_qos_profile_sensor_data ?
+        rclcpp::QoS(rclcpp::KeepLast(queue_size), rmw_qos_profile_sensor_data) :
+        rclcpp::QoS(rclcpp::KeepLast(queue_size));
       
       subscription_ = this->create_subscription<PointCloud2>(
-        input_topic_name, 10, std::bind(&PointCloud2Converter::topic_callback, this, _1));
+        input_topic_name, qos, std::bind(&PointCloud2Converter::topic_callback, this, _1));
         
       publisher_ = create_publisher<PointCloud2>(
-        output_topic_name, 10);
+        output_topic_name, qos);
     }
 
   private:
@@ -113,6 +121,7 @@ class PointCloud2Converter : public rclcpp::Node
     // Parameter names
     std::string input_topic_arg_name_{"input"};
     std::string output_topic_arg_name_{"output"};
+    std::string qos_sensor_arg_name_{"qos_sensor"};
     
 };
 
